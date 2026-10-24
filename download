@@ -1,0 +1,169 @@
+import React, { useEffect, useState } from 'react';
+import { Menu, X } from 'lucide-react';
+import { AudioWidget } from '../audio/AudioWidget';
+import { horrorAudio } from '../../services/audio/HorrorAudioManager';
+
+interface NavItem {
+  label: string;
+  href: string;
+}
+
+const navItems: NavItem[] = [
+  { label: 'Home', href: '#hero' },
+  { label: 'The Story', href: '#story' },
+  { label: 'The Mansion', href: '#mansion' },
+  { label: 'Experiences', href: '#experiences' },
+  { label: 'Games', href: '#games' },
+  { label: 'Gallery', href: '#gallery' },
+  { label: 'The Ritual', href: '#ritual' },
+];
+
+export const GothicNav: React.FC = () => {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState('hero');
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+
+      // Detect active section based on scroll offset
+      const sections = ['hero', 'story', 'mansion', 'experiences', 'games', 'gallery', 'ritual'];
+      for (const id of sections) {
+        const el = document.getElementById(id);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= 200 && rect.bottom >= 200) {
+            setActiveSection(id);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handleNavClick = (href: string) => {
+    horrorAudio.playSFX('click');
+    setIsMobileOpen(false);
+    const target = document.querySelector(href);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  return (
+    <>
+      <header
+        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${
+          isScrolled
+            ? 'bg-[#050507]/90 backdrop-blur-md border-b border-white/10 py-3 shadow-lg shadow-black/60'
+            : 'bg-transparent py-6'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+          {/* Logo */}
+          <a
+            href="#hero"
+            onClick={(e) => {
+              e.preventDefault();
+              handleNavClick('#hero');
+            }}
+            className="group flex items-center gap-2"
+          >
+            <span className="font-gothic-title text-xl sm:text-2xl font-bold tracking-[0.25em] text-ghost-white group-hover:text-blood-crimson transition-colors duration-300">
+              NOCTURNE
+            </span>
+            <span className="w-1.5 h-1.5 rounded-full bg-blood-crimson group-hover:shadow-[0_0_8px_#FF1838] transition-all" />
+          </a>
+
+          {/* Desktop Navigation Links */}
+          <nav className="hidden md:flex items-center space-x-7 text-xs font-medium uppercase tracking-[0.18em]">
+            {navItems.map((item) => {
+              const isActive = activeSection === item.href.replace('#', '');
+              return (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleNavClick(item.href);
+                  }}
+                  onMouseEnter={() => horrorAudio.playSFX('hover')}
+                  className={`relative py-1 transition-colors duration-200 ${
+                    isActive
+                      ? 'text-ghost-white font-semibold'
+                      : 'text-muted hover:text-ghost-white'
+                  }`}
+                >
+                  {item.label}
+                  {isActive && (
+                    <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-blood-crimson shadow-[0_0_8px_#FF1838]" />
+                  )}
+                </a>
+              );
+            })}
+          </nav>
+
+          {/* Right Controls: Audio & Mobile Menu Button */}
+          <div className="flex items-center gap-3">
+            <AudioWidget />
+
+            <button
+              onClick={() => {
+                horrorAudio.playSFX('click');
+                setIsMobileOpen(!isMobileOpen);
+              }}
+              aria-label={isMobileOpen ? 'Close Navigation Menu' : 'Open Navigation Menu'}
+              className="md:hidden p-2 text-moonlight-silver hover:text-white bg-bg-surface/80 border border-white/10 rounded-full"
+            >
+              {isMobileOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Mobile Drawer Navigation */}
+      {isMobileOpen && (
+        <div className="fixed inset-0 z-50 md:hidden bg-[#050507]/95 backdrop-blur-xl flex flex-col justify-center items-center px-6">
+          <button
+            onClick={() => {
+              horrorAudio.playSFX('click');
+              setIsMobileOpen(false);
+            }}
+            aria-label="Close menu"
+            className="absolute top-6 right-6 p-2 text-muted hover:text-white"
+          >
+            <X size={24} />
+          </button>
+
+          <div className="font-gothic-title text-xl tracking-[0.3em] text-blood-crimson mb-8">
+            NOCTURNE
+          </div>
+
+          <div className="flex flex-col items-center space-y-6 text-center">
+            {navItems.map((item) => (
+              <a
+                key={item.label}
+                href={item.href}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavClick(item.href);
+                }}
+                className="font-story text-2xl tracking-widest text-moonlight-silver hover:text-blood-crimson transition-colors"
+              >
+                {item.label}
+              </a>
+            ))}
+          </div>
+
+          <p className="mt-12 text-xs font-mono text-muted tracking-widest">
+            ENTER THE DARKNESS. FACE YOUR FEARS.
+          </p>
+        </div>
+      )}
+    </>
+  );
+};

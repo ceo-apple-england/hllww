@@ -1,0 +1,95 @@
+import React, { useEffect } from 'react';
+import { X } from 'lucide-react';
+import { horrorAudio } from '../../services/audio/HorrorAudioManager';
+
+interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title?: string;
+  children: React.ReactNode;
+  maxWidth?: string;
+}
+
+export const Modal: React.FC<ModalProps> = ({
+  isOpen,
+  onClose,
+  title,
+  children,
+  maxWidth = 'max-w-3xl',
+}) => {
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        horrorAudio.playSFX('click');
+        onClose();
+      }
+    };
+
+    // Lock body scroll
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-[#050507]/90 backdrop-blur-md transition-opacity duration-300"
+        onClick={() => {
+          horrorAudio.playSFX('click');
+          onClose();
+        }}
+        aria-hidden="true"
+      />
+
+      {/* Modal Dialog Content */}
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={title || 'Modal Dialog'}
+        className={`relative z-10 w-full ${maxWidth} bg-bg-secondary border border-moonlight-silver/20 rounded-xs shadow-2xl shadow-blood-red/20 text-moonlight-silver p-6 sm:p-8 overflow-hidden transition-all duration-300 transform scale-100 opacity-100 my-8`}
+      >
+        {/* Subtle Gothic border accents */}
+        <div className="absolute top-0 left-0 w-8 h-[2px] bg-blood-crimson" />
+        <div className="absolute top-0 left-0 w-[2px] h-8 bg-blood-crimson" />
+        <div className="absolute bottom-0 right-0 w-8 h-[2px] bg-blood-crimson" />
+        <div className="absolute bottom-0 right-0 w-[2px] h-8 bg-blood-crimson" />
+
+        {/* Header */}
+        <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/10">
+          {title ? (
+            <h3 className="font-gothic-title text-lg sm:text-xl text-ghost-white tracking-widest">
+              {title}
+            </h3>
+          ) : <div />}
+
+          <button
+            onClick={() => {
+              horrorAudio.playSFX('click');
+              onClose();
+            }}
+            aria-label="Close modal"
+            className="p-2 text-muted hover:text-blood-crimson hover:bg-white/5 rounded-xs transition-colors duration-200"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="relative">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+};
